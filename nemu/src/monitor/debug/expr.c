@@ -7,8 +7,8 @@
 #include <regex.h>
 
 enum {
-	NOTYPE = 256, EQ
-
+	NOTYPE = 256, EQ,
+	NUM, NEQ, OR, AND, REG, REF, NEG
 	/* TODO: Add more token types */
 
 };
@@ -24,7 +24,20 @@ static struct rule {
 
 	{" +",	NOTYPE},				// spaces
 	{"\\+", '+'},					// plus
-	{"==", EQ}						// equal
+	{"==", EQ},						// equal
+	{"0x[0-9a-fA-F]{1,8}", NUM},			// hex
+	{"[0-9]{1,10}", NUM},					// dec
+	{"\\$[a-z]{1,31}", REG},				// register names 
+	{"-", '-'},
+	{"\\*", '*'},
+	{"/", '/'},
+	{"%", '%'},
+	{"!=", NEQ},
+	{"&&", AND},
+	{"\\|\\|", OR},
+	{"!", '!'},
+	{"\\(", '('},
+	{"\\)", ')'} 
 };
 
 #define NR_REGEX (sizeof(rules) / sizeof(rules[0]) )
@@ -79,7 +92,11 @@ static bool make_token(char *e) {
 				 */
 
 				switch(rules[i].token_type) {
-					default: panic("please implement me");
+                                        case NOTYPE: break;
+                                        case NUM:
+                                        case REG: sprintf(tokens[nr_token].str, "%.*s", substr_len, substr_start);
+					default: tokens[nr_token].type = rules[i].token_type;
+							 nr_token ++;
 				}
 
 				break;
@@ -102,7 +119,35 @@ uint32_t expr(char *e, bool *success) {
 	}
 
 	/* TODO: Insert codes to evaluate the expression. */
-	panic("please implement me");
-	return 0;
+
+	int i;
+	int prev_type;
+	for(i = 0; i < nr_token; i ++) {
+		if(tokens[i].type == '-') {
+			if(i == 0) {
+				tokens[i].type = NEG;
+				continue;
+			}
+
+			prev_type = tokens[i - 1].type;
+			if( !(prev_type == ')' || prev_type == NUM || prev_type == REG) ) {
+				tokens[i].type = NEG;
+			}
+		}
+
+		else if(tokens[i].type == '*') {
+			if(i == 0) {
+				tokens[i].type = REF;
+				continue;
+			}
+
+			prev_type = tokens[i - 1].type;
+			if( !(prev_type == ')' || prev_type == NUM || prev_type == REG) ) {
+				tokens[i].type = REF;
+			}
+		}
+	}
+
+	return eval(0, nr_token - 1, success);
 }
 
