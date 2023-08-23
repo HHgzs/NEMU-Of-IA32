@@ -58,7 +58,7 @@ static int cmd_info(char *args) {
 	char *arg = strtok(NULL, " ");
 
 	if(arg != NULL) {
-		if(strcmp(arg, "r") == 0) {
+		if(strcmp(arg, "--r") == 0) {
 			int i;
 			for(i = 0; i < 8; i ++) {
 				printf("%s\t\t0x%08x\t\t%d\n", regsl[i], cpu.gpr[i]._32, cpu.gpr[i]._32);
@@ -67,7 +67,7 @@ static int cmd_info(char *args) {
 			printf("%s\t\t0x%08x\t\t%d\n", "eip", cpu.eip, cpu.eip);
 
 		}
-		// else if(strcmp(arg, "w") == 0) {
+		// else if(strcmp(arg, "--w") == 0) {
 		// 	list_watchpoint();
 		// }
 	}
@@ -88,7 +88,7 @@ static struct {
 
 	/* TODO: Add more commands */
 	{ "si", "Single step execution", cmd_si},
-	{ "info", "info r - print register values\n info w - show watch point state", cmd_info}
+	{ "info", "--r print register values\n        --w show watch point state", cmd_info}
 
 };
 
