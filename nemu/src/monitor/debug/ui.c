@@ -74,6 +74,71 @@ static int cmd_info(char *args) {
 	return 0;
 }
 
+static int cmd_x(char *args) {
+	char *arg = strtok(NULL, " ");
+	int n;
+	swaddr_t addr;
+	int i;
+
+	if(arg != NULL) {
+		sscanf(arg, "%d", &n);
+
+		bool success;
+		addr = expr(arg + strlen(arg) + 1, &success);
+		if(success) { 
+			for(i = 0; i < n; i ++) {
+				if(i % 4 == 0) {
+					printf("0x%08x: ", addr);
+				}
+
+				printf("0x%08x ", swaddr_read(addr, 4));
+				addr += 4;
+				if(i % 4 == 3) {
+					printf("\n");
+				}
+			}
+			printf("\n");
+		}
+		else { printf("Bad expression\n"); }
+
+	}
+	return 0;
+}
+
+
+/* Add expression evaluation  */
+static int cmd_p(char *args) {
+	bool success;
+
+	if(args) {
+		uint32_t r = expr(args, &success);
+		if(success) { printf("0x%08x(%d)\n", r, r); }
+		else { printf("Bad expression\n"); }
+	}
+	return 0;
+}
+
+/* Add set watchpoint  */
+// static int cmd_w(char *args) {
+// 	if(args) {
+// 		int NO = set_watchpoint(args);
+// 		if(NO != -1) { printf("Set watchpoint #%d\n", NO); }
+// 		else { printf("Bad expression\n"); }
+// 	}
+// 	return 0;
+// }
+
+/* Add delete watchpoint */
+// static int cmd_d(char *args) {
+// 	int NO;
+// 	sscanf(args, "%d", &NO);
+// 	if(!delete_watchpoint(NO)) {
+// 		printf("Watchpoint #%d does not exist\n", NO);
+// 	}
+
+// 	return 0;
+// }
+
 
 static int cmd_help(char *args);
 
@@ -88,7 +153,11 @@ static struct {
 
 	/* TODO: Add more commands */
 	{ "si", "Single step execution", cmd_si},
-	{ "info", "--r print register values\n       --w show watch point state", cmd_info}
+	{ "info", "--r print register values\n       --w show watch point state", cmd_info},
+	{ "x", "Examine memory", cmd_x },
+    { "p", "Evaluate the value of expression", cmd_p },
+	// { "w", "Set watchpoint", cmd_w },
+	// { "d", "Delete watchpoint", cmd_d }
 
 };
 
