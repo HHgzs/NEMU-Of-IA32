@@ -4,9 +4,14 @@ WORKDIR /NEMU
 
 COPY . /NEMU
 
-RUN cd /NEMU && make clean && make
+RUN apt-get update && apt-get install -y \
+    bsdmainutils \
+    && git config --global user.email "3166237657@qq.com"  \
+    && git config --global user.name "HHgzs" \
+    && cd /NEMU && make clean && make
 
-CMD ["make", "run"]
+
+
 
 
 # RUN apt-get update && apt-get install -y \
