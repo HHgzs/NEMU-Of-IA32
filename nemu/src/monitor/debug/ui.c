@@ -54,11 +54,10 @@ static int cmd_si(char *args){
 }
 
 
-static int cmd_info(char *args) {
-	char *arg = strtok(NULL, " ");
-
+static int cmd_info(char *arg) {
+	
 	if(arg != NULL) {
-		// if(strcmp(arg, "r") == 0) {
+		if(strcmp(arg, "r") == 0) {
 			int i;
 			for(i = 0; i < 8; i ++) {
 				printf("%s\t\t0x%08x\t\t%d\n", regsl[i], cpu.gpr[i]._32, cpu.gpr[i]._32);
@@ -66,7 +65,7 @@ static int cmd_info(char *args) {
 
 			printf("%s\t\t0x%08x\t\t%d\n", "eip", cpu.eip, cpu.eip);
 
-		// }
+		}
 		// else if(strcmp(arg, "w") == 0) {
 		// 	list_watchpoint();
 		// }
