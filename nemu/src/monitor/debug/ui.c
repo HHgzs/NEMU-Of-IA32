@@ -52,7 +52,6 @@ static int cmd_si(char *args){
     return 0;  
 }
 
-
 static int cmd_info(char *args) {
 	char *arg = strtok(NULL, " ");
 
@@ -72,7 +71,6 @@ static int cmd_info(char *args) {
 	}
 	return 0;
 }
-
 
 static int cmd_x(char *args) {  
     char *N = strtok(NULL," ");  
@@ -94,7 +92,6 @@ static int cmd_x(char *args) {
 }
 
 
-/* Add expression evaluation  */
 static int cmd_p(char *args) {
 	bool success;
 
