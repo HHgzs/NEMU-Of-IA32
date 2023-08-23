@@ -36,100 +36,6 @@ static int cmd_q(char *args) {
 	return -1;
 }
 
-static int cmd_si(char *args){  
-    char *arg = strtok(NULL," ");  
-    int steps = 0;  
-    if(arg == NULL){  
-        cpu_exec(1);  
-        return 0;  
-    }  
-    sscanf(arg, "%d", &steps);  
-    if(i<-1){  
-        printf("Error, N is an integer greater than or equal to -1\n");  
-        return 0;  
-    }   
-    cpu_exec(steps);  
-    
-    return 0;  
-}
-
-static int cmd_info(char *args) {
-	char *arg = strtok(NULL, " ");
-
-	if(arg != NULL) {
-		if(strcmp(arg, "r") == 0) {
-			display_reg();
-		}
-		else if(strcmp(arg, "w") == 0) {
-			list_watchpoint();
-		}
-	}
-	return 0;
-}
-
-static int cmd_x(char *args) {
-	char *arg = strtok(NULL, " ");
-	int n;
-	swaddr_t addr;
-	int i;
-
-	if(arg != NULL) {
-		sscanf(arg, "%d", &n);
-
-		bool success;
-		addr = expr(arg + strlen(arg) + 1, &success);
-		if(success) { 
-			for(i = 0; i < n; i ++) {
-				if(i % 4 == 0) {
-					printf("0x%08x: ", addr);
-				}
-
-				printf("0x%08x ", swaddr_read(addr, 4));
-				addr += 4;
-				if(i % 4 == 3) {
-					printf("\n");
-				}
-			}
-			printf("\n");
-		}
-		else { printf("Bad expression\n"); }
-
-	}
-	return 0;
-}
-
-static int cmd_p(char *args) {
-	bool success;
-
-	if(args) {
-		uint32_t r = expr(args, &success);
-		if(success) { printf("0x%08x(%d)\n", r, r); }
-		else { printf("Bad expression\n"); }
-	}
-	return 0;
-}
-
-
-static int cmd_w(char *args) {
-	if(args) {
-		int NO = set_watchpoint(args);
-		if(NO != -1) { printf("Set watchpoint #%d\n", NO); }
-		else { printf("Bad expression\n"); }
-	}
-	return 0;
-}
-
-static int cmd_d(char *args) {
-	int NO;
-	sscanf(args, "%d", &NO);
-	if(!delete_watchpoint(NO)) {
-		printf("Watchpoint #%d does not exist\n", NO);
-	}
-
-	return 0;
-}
-
-
 static int cmd_help(char *args);
 
 static struct {
@@ -140,15 +46,8 @@ static struct {
 	{ "help", "Display informations about all supported commands", cmd_help },
 	{ "c", "Continue the execution of the program", cmd_c },
 	{ "q", "Exit NEMU", cmd_q },
-	
+
 	/* TODO: Add more commands */
-	{ "si", "Single step execution", cmd_si },
-	{ "info", "info r - print register values; info w - show watch point state", cmd_info },
-	{ "x", "Examine memory", cmd_x },
-    { "p", "Evaluate the value of expression", cmd_p },
-	{ "w", "Set watchpoint", cmd_w },
-	{ "d", "Delete watchpoint", cmd_d }
-	
 
 };
 
