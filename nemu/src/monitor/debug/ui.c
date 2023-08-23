@@ -54,8 +54,9 @@ static int cmd_si(char *args){
 }
 
 
-static int cmd_info(char *arg) {
-	
+static int cmd_info(char *args) {
+	char *arg = strtok(NULL, " ");
+
 	if(arg != NULL) {
 		if(strcmp(arg, "r") == 0) {
 			int i;
@@ -87,7 +88,7 @@ static struct {
 
 	/* TODO: Add more commands */
 	{ "si", "Single step execution", cmd_si},
-	{ "info", "Print registers", cmd_info}
+	{ "info", "info r - print register values\n info w - show watch point state", cmd_info}
 
 };
 
