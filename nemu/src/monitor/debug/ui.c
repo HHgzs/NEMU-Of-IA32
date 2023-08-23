@@ -88,7 +88,7 @@ static struct {
 
 	/* TODO: Add more commands */
 	{ "si", "Single step execution", cmd_si},
-	{ "info", "--r print register values\n        --w show watch point state", cmd_info}
+	{ "info", "--r print register values\n       --w show watch point state", cmd_info}
 
 };
 
