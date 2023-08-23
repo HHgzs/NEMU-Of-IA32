@@ -53,6 +53,28 @@ static int cmd_si(char *args){
     return 0;  
 }
 
+
+static int cmd_info(char *args) {
+	char *arg = strtok(NULL, " ");
+
+	if(arg != NULL) {
+		// if(strcmp(arg, "r") == 0) {
+			int i;
+			for(i = 0; i < 8; i ++) {
+				printf("%s\t\t0x%08x\t\t%d\n", regsl[i], cpu.gpr[i]._32, cpu.gpr[i]._32);
+			}
+
+			printf("%s\t\t0x%08x\t\t%d\n", "eip", cpu.eip, cpu.eip);
+
+		// }
+		// else if(strcmp(arg, "w") == 0) {
+		// 	list_watchpoint();
+		// }
+	}
+	return 0;
+}
+
+
 static int cmd_help(char *args);
 
 static struct {
@@ -65,7 +87,8 @@ static struct {
 	{ "q", "Exit NEMU", cmd_q },
 
 	/* TODO: Add more commands */
-	{ "si", "Single step execution", cmd_si}
+	{ "si", "Single step execution", cmd_si},
+	{ "info", "Print registers", cmd_info}
 
 };
 
