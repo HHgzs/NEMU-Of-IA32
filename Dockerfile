@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y \
 #     vim \
 #     ctags \
 #     tmux \
+#     python-software-properties \
 #     && add-apt-repository 'deb http://archive.ubuntu.com/ubuntu/ trusty main' \
 #     && add-apt-repository 'deb http://archive.ubuntu.com/ubuntu/ trusty universe' \
 #     && apt-get update \
