@@ -9,7 +9,6 @@
 
 void cpu_exec(uint32_t);
 
-/* We use the `readline' library to provide more flexibility to read from stdin. */
 char* rl_gets() {
 	static char *line_read = NULL;
 
@@ -74,35 +73,54 @@ static int cmd_info(char *args) {
 	return 0;
 }
 
-static int cmd_x(char *args) {
-	char *arg = strtok(NULL, " ");
-	int n;
-	swaddr_t addr;
-	int i;
+// static int cmd_x(char *args) {
+// 	char *arg = strtok(NULL, " ");
+// 	int n;
+// 	swaddr_t addr;
+// 	int i;
 
-	if(arg != NULL) {
-		sscanf(arg, "%d", &n);
+// 	if(arg != NULL) {
+// 		sscanf(arg, "%d", &n);
 
-		bool success;
-		addr = expr(arg + strlen(arg) + 1, &success);
-		if(success) { 
-			for(i = 0; i < n; i ++) {
-				if(i % 4 == 0) {
-					printf("0x%08x: ", addr);
-				}
+// 		bool success;
+// 		addr = expr(arg + strlen(arg) + 1, &success);
+// 		if(success) { 
+// 			for(i = 0; i < n; i ++) {
+// 				if(i % 4 == 0) {
+// 					printf("0x%08x: ", addr);
+// 				}
 
-				printf("0x%08x ", swaddr_read(addr, 4));
-				addr += 4;
-				if(i % 4 == 3) {
-					printf("\n");
-				}
-			}
-			printf("\n");
-		}
-		else { printf("Bad expression\n"); }
+// 				printf("0x%08x ", swaddr_read(addr, 4));
+// 				addr += 4;
+// 				if(i % 4 == 3) {
+// 					printf("\n");
+// 				}
+// 			}
+// 			printf("\n");
+// 		}
+// 		else { printf("Bad expression\n"); }
 
-	}
-	return 0;
+// 	}
+// 	return 0;
+// }
+
+static int cmd_x(char *args){  
+    char *N = strtok(NULL," ");  
+    char *EXPR = strtok(NULL," ");  
+    int len;  
+    lnaddr_t address;  
+      
+    sscanf(N, "%d", &len);  
+    sscanf(EXPR, "%x", &address);  
+      
+    printf("0x%x:",address);  
+    int i;
+    for(i = 0; i < len; i ++){  
+        printf("%08x ",lnaddr_read(address,4));  
+        address += 4;  
+    }  
+    printf("\n");  
+    return 0;  
 }
 
 
