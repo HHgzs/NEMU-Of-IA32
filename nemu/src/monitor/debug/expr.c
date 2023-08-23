@@ -112,6 +112,124 @@ static bool make_token(char *e) {
 	return true; 
 }
 
+static int op_prec(int t) {
+	switch(t) {
+		case '!': case NEG: case REF: return 0;
+		case '*': case '/': case '%': return 1;
+		case '+': case '-': return 2;
+		case EQ: case NEQ: return 4;
+		case AND: return 8;
+		case OR: return 9;
+		default: assert(0);
+	}
+}
+
+static inline int op_prec_cmp(int t1, int t2) {
+	return op_prec(t1) - op_prec(t2);
+}
+
+static int find_dominated_op(int s, int e, bool *success) {
+	int i;
+	int bracket_level = 0;
+	int dominated_op = -1;
+	for(i = s; i <= e; i ++) {
+		switch(tokens[i].type) {
+			case REG: case NUM: break;
+
+			case '(': 
+				bracket_level ++; 
+				break;
+
+			case ')': 
+				bracket_level --; 
+				if(bracket_level < 0) {
+					*success = false;
+					return 0;
+				}
+				break;
+
+			default:
+				if(bracket_level == 0) {
+					if(dominated_op == -1 || 
+							op_prec_cmp(tokens[dominated_op].type, tokens[i].type) < 0 ||
+							(op_prec_cmp(tokens[dominated_op].type, tokens[i].type) == 0 && 
+							 tokens[i].type != '!' && tokens[i].type != '~' &&
+							 tokens[i].type != NEG && tokens[i].type != REF) ) {
+						dominated_op = i;
+					}
+				}
+				break;
+		}
+	}
+
+	*success = (dominated_op != -1);
+	return dominated_op;
+}
+
+uint32_t get_reg_val(const char*, bool *);
+
+static uint32_t eval(int s, int e, bool *success) {
+	if(s > e) {
+		// bad expression
+		*success = false;
+		return 0;
+	}
+	else if(s == e) {
+		// single token
+		uint32_t val;
+		switch(tokens[s].type) {
+			case REG: val = get_reg_val(tokens[s].str + 1, success);	// +1 to skip '$'
+					  if(!*success) { return 0; }
+					  break;
+
+			case NUM: val = strtol(tokens[s].str, NULL, 0); break;
+
+			default: assert(0);
+		}
+
+		*success = true;
+		return val;
+	}
+	else if(tokens[s].type == '(' && tokens[e].type == ')') {
+		return eval(s + 1, e - 1, success);
+	}
+	else {
+		int dominated_op = find_dominated_op(s, e, success);
+		if(!*success) { return 0; }
+
+		int op_type = tokens[dominated_op].type;
+		if(op_type == '!' || op_type == NEG || op_type == REF) {
+			uint32_t val = eval(dominated_op + 1, e, success);
+			if(!*success) { return 0; }
+
+			switch(op_type) {
+				case '!': return !val;
+				case NEG: return -val;
+				case REF: return swaddr_read(val, 4);
+				default: assert(0);
+			}
+		}
+
+		uint32_t val1 = eval(s, dominated_op - 1, success);
+		if(!*success) { return 0; }
+		uint32_t val2 = eval(dominated_op + 1, e, success);
+		if(!*success) { return 0; }
+
+		switch(op_type) {
+			case '+': return val1 + val2;
+			case '-': return val1 - val2;
+			case '*': return val1 * val2;
+			case '/': return val1 / val2;
+			case '%': return val1 % val2;
+			case EQ: return val1 == val2;
+			case NEQ: return val1 != val2;
+			case AND: return val1 && val2;
+			case OR: return val1 || val2;
+			default: assert(0);
+		}
+	}
+}
+
 uint32_t expr(char *e, bool *success) {
 	if(!make_token(e)) {
 		*success = false;
