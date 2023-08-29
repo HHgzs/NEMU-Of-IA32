@@ -4,6 +4,7 @@
 #include "nemu.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -84,27 +85,6 @@ static int cmd_info(char *args)
 	return 0;
 }
 
-static int cmd_x(char *args)
-{
-	char *N = strtok(NULL, " ");
-	char *EXPR = strtok(NULL, " ");
-	int len;
-	lnaddr_t address;
-
-	sscanf(N, "%d", &len);
-	sscanf(EXPR, "%x", &address);
-
-	printf("0x%x:", address);
-	int i;
-	for (i = 0; i < len; i++)
-	{
-		printf("%08x ", lnaddr_read(address, 4));
-		address += 4;
-	}
-	printf("\n");
-	return 0;
-}
-
 static int cmd_p(char *args)
 {
 	bool success;
@@ -123,6 +103,49 @@ static int cmd_p(char *args)
 	}
 	return 0;
 }
+
+static int cmd_x(char *args)
+{
+	printf("args: %s\n", args);
+    char* N = NULL;
+    char* EXPR = NULL;
+
+    // 查找第一个空格的位置
+    char* spacePos = strchr(args, ' ');
+    if (spacePos != NULL)
+    {
+        *spacePos = '\0'; // 将空格替换为字符串结束符'\0'
+        N = args; // 第一个空格前的字符串
+        EXPR = spacePos + 1; // 第一个空格后的字符串
+    }
+    else
+    {
+        N = args; // 如果没有空格，则整个字符串为第一个字符串
+        EXPR = ""; // 第二个字符串为空字符串
+    }
+
+    printf("N: %s\n", N);
+    printf("EXPR: %s\n", EXPR);
+
+	int len;
+
+	sscanf(args, "%d", &len);
+	lnaddr_t address;
+	bool success;
+	address = expr(EXPR, &success);
+	printf(address);
+
+
+	int i;
+	for (i = 0; i < len; i++)
+	{
+		printf("%08x ", lnaddr_read(address, 4));
+		address += 4;
+	}
+	printf("\n");
+	return 0;
+}
+
 
 /* Add set watchpoint  */
 static int cmd_w(char *args)
@@ -169,11 +192,11 @@ static struct
 
 	/* TODO: Add more commands */
 	{"si", "Single step execution", cmd_si},
-	{"info", "--r print register values\n       --w show watch point state", cmd_info},
-	{"x", "Examine memory", cmd_x},
-	{"p", "Evaluate the value of expression", cmd_p},
-	{"w", "Set watchpoint", cmd_w},
-	{"d", "Delete watchpoint", cmd_d}
+	{"info", "r to print register values\n       w to show watch point state", cmd_info},
+	{"x", "examine memory", cmd_x},
+	{"p", "calculate expression", cmd_p},
+	{"w", "set a new watchpoint", cmd_w},
+	{"d", "delete watchpoint", cmd_d}
 
 };
 

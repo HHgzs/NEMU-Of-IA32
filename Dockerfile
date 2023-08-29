@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     bsdmainutils \
     && git config --global user.email "3166237657@qq.com"  \
     && git config --global user.name "HHgzs" \
-    # && cd /NEMU && make clean && make
+    && cd /NEMU && make clean
 # RUN apt-get update && apt-get install -y \
 #     build-essential \
 #     gcc-doc \
