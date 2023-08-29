@@ -9,11 +9,6 @@ RUN apt-get update && apt-get install -y \
     && git config --global user.email "3166237657@qq.com"  \
     && git config --global user.name "HHgzs" \
     # && cd /NEMU && make clean && make
-
-
-
-
-
 # RUN apt-get update && apt-get install -y \
 #     build-essential \
 #     gcc-doc \
@@ -31,5 +26,3 @@ RUN apt-get update && apt-get install -y \
 #     && apt-get update \
 #     && apt-get install -y gcc-4.4 gcc-4.4-multilib 
 #     && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.4 100
-
-
