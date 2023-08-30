@@ -130,19 +130,24 @@ static int cmd_x(char *args)
 	int len;
 
 	sscanf(args, "%d", &len);
-	lnaddr_t address;
+	swaddr_t address;
 	bool success;
 	address = expr(EXPR, &success);
-	printf(address);
-
+	if (!success)
+	{
+		printf("Bad expression\n");
+		return 0;
+	}
+	printf("address: 0x%08x: ", address);
 
 	int i;
 	for (i = 0; i < len; i++)
 	{
-		printf("%08x ", lnaddr_read(address, 4));
+		printf("0x%08x ", swaddr_read(address, 4));
 		address += 4;
 	}
 	printf("\n");
+
 	return 0;
 }
 
