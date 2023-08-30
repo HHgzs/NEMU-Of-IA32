@@ -106,7 +106,7 @@ static int cmd_p(char *args)
 
 static int cmd_x(char *args)
 {
-	printf("args: %s\n", args);
+	// printf("args: %s\n", args);
     // char* N = NULL;
     char* EXPR = NULL;
 
