@@ -145,7 +145,7 @@ static int cmd_x(char *args)
 	{
 		printf("0x%08x ", swaddr_read(address, 4));
 		address += 4;
-		if(i % 4 == 3) printf("\n");
+		if(i % 5 == 4) printf("\n");
 	}
 	printf("\n");
 
