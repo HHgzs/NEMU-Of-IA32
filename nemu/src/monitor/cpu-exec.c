@@ -80,7 +80,7 @@ void cpu_exec(volatile uint32_t n)
 			printf("%s\n", asm_buf);
 		}
 #endif
-		WP *wp = scan_watchpoint();
+		WP *wp = wp_scanner();
 		if (wp != NULL)
 		{
 			puts(asm_buf);
@@ -94,7 +94,6 @@ void cpu_exec(volatile uint32_t n)
 		{
 			return;
 		}
-		/* TODO: check watchpoints here. */
 
 #ifdef HAS_DEVICE
 		extern void device_update();

@@ -8,7 +8,7 @@ extern char *exec_file;
 
 void load_elf_tables(int, char *[]);
 void init_regex();
-void init_wp_pool();
+void wp_init();
 void init_ddr3();
 
 FILE *log_fp = NULL;
@@ -39,7 +39,7 @@ void init_monitor(int argc, char *argv[])
 	init_regex();
 
 	/* Initialize the watchpoint pool. */
-	init_wp_pool();
+	wp_init();
 
 	/* Display welcome message. */
 	welcome();

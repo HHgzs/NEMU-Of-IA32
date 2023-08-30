@@ -70,16 +70,16 @@ static int cmd_info(char *args)
 		if (strcmp(arg, "r") == 0)
 		{
 			int i;
-			for (i = 0; i < 8; i++)
+			for (i = 0; i < 4; i++)
 			{
-				printf("%s\t\t0x%08x\t\t%d\n", regsl[i], cpu.gpr[i]._32, cpu.gpr[i]._32);
+				printf("$%s\t(0x%08x)\n", regsl[i], cpu.gpr[i]._32);
 			}
 
-			printf("%s\t\t0x%08x\t\t%d\n", "eip", cpu.eip, cpu.eip);
+			// printf("%s\t\t0x%08x\t\t%d\n", "eip", cpu.eip, cpu.eip);
 		}
 		else if (strcmp(arg, "w") == 0)
 		{
-			list_watchpoint();
+			wp_display();
 		}
 	}
 	return 0;
@@ -157,7 +157,7 @@ static int cmd_w(char *args)
 {
 	if (args)
 	{
-		int NO = set_watchpoint(args);
+		int NO = wp_set(args);
 		if (NO != -1)
 		{
 			printf("Set watchpoint #%d\n", NO);
@@ -175,7 +175,7 @@ static int cmd_d(char *args)
 {
 	int NO;
 	sscanf(args, "%d", &NO);
-	if (!delete_watchpoint(NO))
+	if (!wp_remove(NO))
 	{
 		printf("Watchpoint #%d does not exist\n", NO);
 	}

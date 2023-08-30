@@ -7,7 +7,7 @@
 static WP wp_pool[NR_WP];
 static WP *head, *free_;
 
-void init_wp_pool()
+void wp_init()
 {
 	int i;
 	for (i = 0; i < NR_WP; i++)
@@ -22,27 +22,27 @@ void init_wp_pool()
 }
 
 
-static WP* new_WP() {
+static WP* wp_create() {
 	assert(free_ != NULL);
 	WP *p = free_;
 	free_ = free_->next;
 	return p;
 }
 
-static void free_WP(WP *p) {
+static void wp_release(WP *p) {
 	assert(p >= wp_pool && p < wp_pool + NR_WP);
 	free(p->expr);
 	p->next = free_;
 	free_ = p;
 }
 
-int set_watchpoint(char *e) {
+int wp_set(char *e) {
 	uint32_t val;
 	bool success;
 	val = expr(e, &success);
 	if(!success) return -1;
 
-	WP *p = new_WP();
+	WP *p = wp_create();
 	p->expr = strdup(e);
 	p->old_val = val;
 
@@ -52,7 +52,7 @@ int set_watchpoint(char *e) {
 	return p->NO;
 }
 
-bool delete_watchpoint(int NO) {
+bool wp_remove(int NO) {
 	WP *p, *prev = NULL;
 	for(p = head; p != NULL; prev = p, p = p->next) {
 		if(p->NO == NO) { break; }
@@ -62,11 +62,11 @@ bool delete_watchpoint(int NO) {
 	if(prev == NULL) { head = p->next; }
 	else { prev->next = p->next; }
 
-	free_WP(p);
+	wp_release(p);
 	return true;
 }
 
-void list_watchpoint() {
+void wp_display() {
 	if(head == NULL) {
 		printf("No watchpoints\n");
 		return;
@@ -79,7 +79,7 @@ void list_watchpoint() {
 	}
 }
 
-WP* scan_watchpoint() {
+WP* wp_scanner() {
 	WP *p;
 	for(p = head; p != NULL; p = p->next) {
 		bool success;
