@@ -242,7 +242,7 @@ void ui_mainloop()
 		char *str = rl_gets();
 		char *str_end = str + strlen(str);
 
-		/* extract the first token as the command */
+		/* extract the first symbol as the command */
 		char *cmd = strtok(str, " ");
 		if (cmd == NULL)
 		{

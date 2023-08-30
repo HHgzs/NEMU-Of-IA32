@@ -24,7 +24,7 @@ enum
 static struct rule
 {
 	char *regex;
-	int token_type;
+	int symbol_type;
 } rules[] = {
 
 	/* TODO: Add more rules.
@@ -87,26 +87,26 @@ void init_regex()
 	}
 }
 
-typedef struct token
+typedef struct symbol
 {
 	int type;
 	char str[32];
 } Token;
 
-Token tokens[32];
-int nr_token;
+Token symbols[32];
+int symbol_;
 
-static bool make_token(char *e)
+static bool make_symbol(char *e)
 {
 	int position = 0;
 	int i;
 	regmatch_t pmatch;
 
-	nr_token = 0;
+	symbol_ = 0;
 
 	while (e[position] != '\0')
 	{
-		/* Try all rules one by one. */
+
 		for (i = 0; i < NR_REGEX; i++)
 		{
 			if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0)
@@ -114,19 +114,19 @@ static bool make_token(char *e)
 				char *substr_start = e + position;
 				int substr_len = pmatch.rm_eo;
 
-				Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s", i, rules[i].regex, position, substr_len, substr_len, substr_start);
+				Log("regular expressions \"%s\" fit at %d, whitch length is %d: %.*s", rules[i].regex, position, substr_len, substr_len, substr_start);
 				position += substr_len;
 
-				switch (rules[i].token_type)
+				switch (rules[i].symbol_type)
 				{
 				case NOTYPE:
 					break;
 				case NUM:
 				case REG:
-					sprintf(tokens[nr_token].str, "%.*s", substr_len, substr_start);
+					sprintf(symbols[symbol_].str, "%.*s", substr_len, substr_start);
 				default:
-					tokens[nr_token].type = rules[i].token_type;
-					nr_token++;
+					symbols[symbol_].type = rules[i].symbol_type;
+					symbol_++;
 				}
 
 				break;
@@ -182,7 +182,7 @@ static int master_op_finder(int s, int e, bool *success)
 	int master_op = -1;
 	for (i = s; i <= e; i++)
 	{
-		switch (tokens[i].type)
+		switch (symbols[i].type)
 		{
 		case REG:
 		case NUM:
@@ -205,10 +205,10 @@ static int master_op_finder(int s, int e, bool *success)
 			if (bracket_level == 0)
 			{
 				if (master_op == -1 ||
-					op_compare(tokens[master_op].type, tokens[i].type) < 0 ||
-					(op_compare(tokens[master_op].type, tokens[i].type) == 0 &&
-					 tokens[i].type != '!' && tokens[i].type != '~' &&
-					 tokens[i].type != NEG && tokens[i].type != REF))
+					op_compare(symbols[master_op].type, symbols[i].type) < 0 ||
+					(op_compare(symbols[master_op].type, symbols[i].type) == 0 &&
+					 symbols[i].type != '!' && symbols[i].type != '~' &&
+					 symbols[i].type != NEG && symbols[i].type != REF))
 				{
 					master_op = i;
 				}
@@ -233,10 +233,10 @@ static uint32_t eval(int s, int e, bool *success)
 	else if (s == e)
 	{
 		uint32_t val;
-		switch (tokens[s].type)
+		switch (symbols[s].type)
 		{
 		case REG:
-			val = get_reg_val(tokens[s].str + 1, success); // skip '$'
+			val = get_reg_val(symbols[s].str + 1, success); // skip '$'
 			if (!*success)
 			{
 				return 0;
@@ -244,7 +244,7 @@ static uint32_t eval(int s, int e, bool *success)
 			break;
 
 		case NUM:
-			val = strtol(tokens[s].str, NULL, 0);
+			val = strtol(symbols[s].str, NULL, 0);
 			break;
 
 		default:
@@ -254,7 +254,7 @@ static uint32_t eval(int s, int e, bool *success)
 		*success = true;
 		return val;
 	}
-	else if (tokens[s].type == '(' && tokens[e].type == ')')
+	else if (symbols[s].type == '(' && symbols[e].type == ')')
 	{
 		return eval(s + 1, e - 1, success);
 	}
@@ -266,7 +266,7 @@ static uint32_t eval(int s, int e, bool *success)
 			return 0;
 		}
 
-		int op_type = tokens[master_op].type;
+		int op_type = symbols[master_op].type;
 		if (op_type == '!' || op_type == NEG || op_type == REF)
 		{
 			uint32_t val = eval(master_op + 1, e, success);
@@ -327,7 +327,7 @@ static uint32_t eval(int s, int e, bool *success)
 
 uint32_t expr(char *e, bool *success)
 {
-	if (!make_token(e))
+	if (!make_symbol(e))
 	{
 		*success = false;
 		return 0;
@@ -335,38 +335,38 @@ uint32_t expr(char *e, bool *success)
 
 	int i;
 	int prev_type;
-	for (i = 0; i < nr_token; i++)
+	for (i = 0; i < symbol_; i++)
 	{
-		if (tokens[i].type == '-')
+		if (symbols[i].type == '-')
 		{
 			if (i == 0)
 			{
-				tokens[i].type = NEG;
+				symbols[i].type = NEG;
 				continue;
 			}
 
-			prev_type = tokens[i - 1].type;
+			prev_type = symbols[i - 1].type;
 			if (!(prev_type == ')' || prev_type == NUM || prev_type == REG))
 			{
-				tokens[i].type = NEG;
+				symbols[i].type = NEG;
 			}
 		}
 
-		else if (tokens[i].type == '*')
+		else if (symbols[i].type == '*')
 		{
 			if (i == 0)
 			{
-				tokens[i].type = REF;
+				symbols[i].type = REF;
 				continue;
 			}
 
-			prev_type = tokens[i - 1].type;
+			prev_type = symbols[i - 1].type;
 			if (!(prev_type == ')' || prev_type == NUM || prev_type == REG))
 			{
-				tokens[i].type = REF;
+				symbols[i].type = REF;
 			}
 		}
 	}
 
-	return eval(0, nr_token - 1, success);
+	return eval(0, symbol_ - 1, success);
 }
