@@ -94,7 +94,7 @@ static int cmd_p(char *args)
 		uint32_t r = expr(args, &success);
 		if (success)
 		{
-			printf("0x%08x(%d)\n", r, r);
+			printf("0x%08x\t%d\n", r, r);
 		}
 		else
 		{
@@ -151,7 +151,6 @@ static int cmd_x(char *args)
 
 	return 0;
 }
-
 
 static int cmd_w(char *args)
 {
