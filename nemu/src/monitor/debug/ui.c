@@ -107,7 +107,7 @@ static int cmd_p(char *args)
 static int cmd_x(char *args)
 {
 	printf("args: %s\n", args);
-    char* N = NULL;
+    // char* N = NULL;
     char* EXPR = NULL;
 
     // 查找第一个空格的位置
@@ -115,17 +115,17 @@ static int cmd_x(char *args)
     if (spacePos != NULL)
     {
         *spacePos = '\0'; // 将空格替换为字符串结束符'\0'
-        N = args; // 第一个空格前的字符串
+        // N = args;  第一个空格前的字符串
         EXPR = spacePos + 1; // 第一个空格后的字符串
     }
     else
     {
-        N = args; // 如果没有空格，则整个字符串为第一个字符串
+        // N = args;  如果没有空格，则整个字符串为第一个字符串
         EXPR = ""; // 第二个字符串为空字符串
     }
 
-    printf("N: %s\n", N);
-    printf("EXPR: %s\n", EXPR);
+    // printf("N: %s\n", N);
+    // printf("EXPR: %s\n", EXPR);
 
 	int len;
 
@@ -138,13 +138,14 @@ static int cmd_x(char *args)
 		printf("Bad expression\n");
 		return 0;
 	}
-	printf("address: 0x%08x: ", address);
+	// printf("address: 0x%08x: ", address);
 
 	int i;
 	for (i = 0; i < len; i++)
 	{
 		printf("0x%08x ", swaddr_read(address, 4));
 		address += 4;
+		if(i % 4 == 3) printf("\n");
 	}
 	printf("\n");
 
@@ -152,7 +153,6 @@ static int cmd_x(char *args)
 }
 
 
-/* Add set watchpoint  */
 static int cmd_w(char *args)
 {
 	if (args)
@@ -170,7 +170,6 @@ static int cmd_w(char *args)
 	return 0;
 }
 
-/* Add delete watchpoint */
 static int cmd_d(char *args)
 {
 	int NO;
