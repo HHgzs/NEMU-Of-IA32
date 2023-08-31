@@ -4,7 +4,7 @@
 
 #define NR_WP 32
 
-static WP wp_pool[NR_WP];
+static WP wp_array[NR_WP];
 static WP *head, *free_;
 
 void wp_init()
@@ -12,13 +12,13 @@ void wp_init()
 	int i;
 	for (i = 0; i < NR_WP; i++)
 	{
-		wp_pool[i].NO = i;
-		wp_pool[i].next = &wp_pool[i + 1];
+		wp_array[i].NO = i;
+		wp_array[i].next = &wp_array[i + 1];
 	}
-	wp_pool[NR_WP - 1].next = NULL;
+	wp_array[NR_WP - 1].next = NULL;
 
 	head = NULL;
-	free_ = wp_pool;
+	free_ = wp_array;
 }
 
 
@@ -30,7 +30,7 @@ static WP* wp_create() {
 }
 
 static void wp_release(WP *p) {
-	assert(p >= wp_pool && p < wp_pool + NR_WP);
+	assert(p >= wp_array && p < wp_array + NR_WP);
 	free(p->expr);
 	p->next = free_;
 	free_ = p;

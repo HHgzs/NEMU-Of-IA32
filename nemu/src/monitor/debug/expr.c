@@ -204,6 +204,7 @@ static int master_op_finder(int s, int e, bool *success)
 		default:
 			if (bracket_level == 0)
 			{
+
 				if (master_op == -1 ||
 					op_compare(symbols[master_op].type, symbols[i].type) < 0 ||
 					(op_compare(symbols[master_op].type, symbols[i].type) == 0 &&
@@ -260,7 +261,37 @@ static uint32_t eval(int s, int e, bool *success)
 	}
 	else
 	{
+
+
+
+
+
+
+
+
+
 		int master_op = master_op_finder(s, e, success);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
 		if (!*success)
 		{
 			return 0;
