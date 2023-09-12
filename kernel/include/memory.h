@@ -9,14 +9,14 @@
 #define KOFFSET 0
 #endif
 
-#define va_to_pa(addr) ((void*)(((uint32_t)(addr)) - KOFFSET))
-#define pa_to_va(addr) ((void*)(((uint32_t)(addr)) + KOFFSET))
+#define va_to_pa(addr) ((void *)(((uint32_t)(addr)) - KOFFSET))
+#define pa_to_va(addr) ((void *)(((uint32_t)(addr)) + KOFFSET))
 
 /* the maxinum loader size is 16MB */
-#define KMEM      (16 * 1024 * 1024)
+#define KMEM (16 * 1024 * 1024)
 
 /* NEMU has 128MB physical memory  */
-#define PHY_MEM   (128 * 1024 * 1024)
+#define PHY_MEM (128 * 1024 * 1024)
 
 #define make_invalid_pde() 0
 #define make_invalid_pte() 0
