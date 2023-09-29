@@ -3,6 +3,7 @@
 make_helper(call_si) {
 	int len = decode_si_l(eip + 1);
 	swaddr_t ret_addr = cpu.eip + len + 1;
+	current_sreg = R_SS;
 	swaddr_write(cpu.esp - 4, 4, ret_addr);
 	cpu.esp -= 4;
 
@@ -15,6 +16,7 @@ make_helper(call_si) {
 make_helper(call_rm) {
 	int len = decode_rm_l(eip + 1);
 	swaddr_t ret_addr = cpu.eip + len + 1;
+	current_sreg = R_SS;
 	swaddr_write(cpu.esp - 4, 4, ret_addr);
 	cpu.esp -= 4;
 

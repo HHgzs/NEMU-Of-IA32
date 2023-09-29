@@ -10,7 +10,7 @@
 
 SDL_Surface *real_screen;
 SDL_Surface *screen;
-uint8_t (*pixel_buf) [SCREEN_COL];
+uint8_t (*pixel_buf)[SCREEN_COL];
 
 #define TIMER_HZ 100
 
@@ -22,12 +22,14 @@ extern void timer_intr();
 extern void keyboard_intr();
 extern void update_screen();
 
-static void timer_sig_handler(int signum) {
-	jiffy ++;
+static void timer_sig_handler(int signum)
+{
+	jiffy++;
 	timer_intr();
 
 	device_update_flag = true;
-	if(jiffy % (TIMER_HZ / VGA_HZ) == 0) {
+	if (jiffy % (TIMER_HZ / VGA_HZ) == 0)
+	{
 		update_screen_flag = true;
 	}
 
@@ -35,52 +37,62 @@ static void timer_sig_handler(int signum) {
 	Assert(ret == 0, "Can not set timer");
 }
 
-void device_update() {
-	if(!device_update_flag) {
+void device_update()
+{
+	if (!device_update_flag)
+	{
 		return;
 	}
 	device_update_flag = false;
 
-	if(update_screen_flag) {
+	if (update_screen_flag)
+	{
 		update_screen();
 		update_screen_flag = false;
 	}
 
 	SDL_Event event;
-	while(SDL_PollEvent(&event)) {
+	while (SDL_PollEvent(&event))
+	{
 		// If a key was pressed
 
 		uint32_t sym = event.key.keysym.sym;
-		if( event.type == SDL_KEYDOWN ) {
+		if (event.type == SDL_KEYDOWN)
+		{
 			keyboard_intr(sym2scancode[sym >> 8][sym & 0xff]);
 		}
-		else if( event.type == SDL_KEYUP ) {
+		else if (event.type == SDL_KEYUP)
+		{
 			keyboard_intr(sym2scancode[sym >> 8][sym & 0xff] | 0x80);
 		}
 
 		// If the user has Xed out the window
-		if( event.type == SDL_QUIT ) {
-			//Quit the program
+		if (event.type == SDL_QUIT)
+		{
+			// Quit the program
 			exit(0);
 		}
 	}
 }
 
-void sdl_clear_event_queue() {
+void sdl_clear_event_queue()
+{
 	SDL_Event event;
-	while(SDL_PollEvent(&event));
+	while (SDL_PollEvent(&event))
+		;
 }
 
-void init_sdl() {
+void init_sdl()
+{
 	int ret = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE);
 	Assert(ret == 0, "SDL_Init failed");
 
-	real_screen = SDL_SetVideoMode(640, 400, 8, 
-			SDL_HWSURFACE | SDL_HWPALETTE | SDL_HWACCEL | SDL_ASYNCBLIT);
+	real_screen = SDL_SetVideoMode(640, 400, 8,
+								   SDL_HWSURFACE | SDL_HWPALETTE | SDL_HWACCEL | SDL_ASYNCBLIT);
 
 	screen = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 8,
-			real_screen->format->Rmask, real_screen->format->Gmask,
-			real_screen->format->Bmask, real_screen->format->Amask);
+								  real_screen->format->Rmask, real_screen->format->Gmask,
+								  real_screen->format->Bmask, real_screen->format->Amask);
 	pixel_buf = screen->pixels;
 
 	SDL_SetPalette(real_screen, SDL_LOGPAL | SDL_PHYSPAL, (void *)&palette, 0, 256);
@@ -101,4 +113,4 @@ void init_sdl() {
 	ret = setitimer(ITIMER_VIRTUAL, &it, NULL);
 	Assert(ret == 0, "Can not set timer");
 }
-#endif	/* HAS_DEVICE */
+#endif /* HAS_DEVICE */

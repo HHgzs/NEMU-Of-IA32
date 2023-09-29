@@ -3,6 +3,7 @@
 #define instr stos
 
 make_helper(concat(stos_, SUFFIX)) {
+	current_sreg = R_ES;
 	MEM_W(cpu.edi, REG(R_EAX));
 	cpu.edi += (cpu.eflags.DF ? -DATA_BYTE : DATA_BYTE);
 

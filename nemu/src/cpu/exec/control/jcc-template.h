@@ -8,7 +8,6 @@
 		return len + 1; \
 	}
 
-
 make_jcc_helper(b)
 make_jcc_helper(e)
 make_jcc_helper(ne)

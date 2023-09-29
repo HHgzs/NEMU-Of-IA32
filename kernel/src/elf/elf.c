@@ -44,7 +44,7 @@ uint32_t loader()
 		if (ph->p_type == PT_LOAD)
 		{
 
-			uint32_t pa = ph->p_vaddr;
+			uint32_t pa = ph->p_vaddr = mm_malloc(ph->p_vaddr, ph->p_memsz);
 
 			/* TODO: read the content of the segment from the ELF file
 			 * to the memory region [VirtAddr, VirtAddr + FileSiz)
@@ -76,6 +76,7 @@ uint32_t loader()
 #ifdef HAS_DEVICE
 	create_video_mapping();
 #endif
+	create_video_mapping();
 
 	write_cr3(get_ucr3());
 #endif

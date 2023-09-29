@@ -4,12 +4,23 @@
 #include "nemu.h"
 
 #include <stdlib.h>
-#include <string.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <elf.h>
+#define TestCorrect(x)                \
+	if (x)                            \
+	{                                 \
+		printf("Invalid Command!\n"); \
+		return 0;                     \
+	}
 
+void GetFunctionAddr(swaddr_t EIP, char *name);
 void cpu_exec(uint32_t);
+void display_reg();
+hwaddr_t page_translate(lnaddr_t addr);
+hwaddr_t page_translate_additional(lnaddr_t addr, int *flag);
 
+/* We use the `readline' library to provide more flexibility to read from stdin. */
 char *rl_gets()
 {
 	static char *line_read = NULL;
@@ -30,37 +41,21 @@ char *rl_gets()
 	return line_read;
 }
 
-static int cmd_c(char *args)
-{
-	cpu_exec(-1);
-	return 0;
-}
-
-static int cmd_q(char *args)
-{
-	return -1;
-}
-
+/* TODO: Add single step */
 static int cmd_si(char *args)
 {
 	char *arg = strtok(NULL, " ");
-	int steps = 0;
-	if (arg == NULL)
-	{
-		cpu_exec(1);
-		return 0;
-	}
-	sscanf(arg, "%d", &steps);
-	if (steps < -1)
-	{
-		printf("Error, N is an integer greater than or equal to -1\n");
-		return 0;
-	}
-	cpu_exec(steps);
+	int i = 1;
 
+	if (arg != NULL)
+	{
+		sscanf(arg, "%d", &i);
+	}
+	cpu_exec(i);
 	return 0;
 }
 
+/* TODO: Add info command */
 static int cmd_info(char *args)
 {
 	char *arg = strtok(NULL, " ");
@@ -69,32 +64,47 @@ static int cmd_info(char *args)
 	{
 		if (strcmp(arg, "r") == 0)
 		{
-			int i;
-			for (i = 0; i < 4; i++)
-			{
-				printf("$%s\t(0x%08x)\n", regsl[i], cpu.gpr[i]._32);
-			}
-
-			// printf("%s\t\t0x%08x\t\t%d\n", "eip", cpu.eip, cpu.eip);
+			display_reg();
 		}
 		else if (strcmp(arg, "w") == 0)
 		{
-			wp_display();
+			list_watchpoint();
 		}
 	}
 	return 0;
 }
 
-static int cmd_p(char *args)
+/* Add examine memory */
+static int cmd_x(char *args)
 {
-	bool success;
+	char *arg = strtok(NULL, " ");
+	int n;
+	swaddr_t addr;
+	int i;
 
-	if (args)
+	if (arg != NULL)
 	{
-		uint32_t r = expr(args, &success);
+		sscanf(arg, "%d", &n);
+
+		bool success;
+		addr = expr(arg + strlen(arg) + 1, &success);
 		if (success)
 		{
-			printf("0x%08x\t%d\n", r, r);
+			for (i = 0; i < n; i++)
+			{
+				if (i % 4 == 0)
+				{
+					printf("0x%08x: ", addr);
+				}
+				current_sreg = R_DS;
+				printf("0x%08x ", swaddr_read(addr, 4));
+				addr += 4;
+				if (i % 4 == 3)
+				{
+					printf("\n");
+				}
+			}
+			printf("\n");
 		}
 		else
 		{
@@ -104,59 +114,32 @@ static int cmd_p(char *args)
 	return 0;
 }
 
-static int cmd_x(char *args)
+/* Add expression evaluation  */
+static int cmd_p(char *args)
 {
-	// printf("args: %s\n", args);
-    // char* N = NULL;
-    char* EXPR = NULL;
-
-    // 查找第一个空格的位置
-    char* spacePos = strchr(args, ' ');
-    if (spacePos != NULL)
-    {
-        *spacePos = '\0'; // 将空格替换为字符串结束符'\0'
-        // N = args;  第一个空格前的字符串
-        EXPR = spacePos + 1; // 第一个空格后的字符串
-    }
-    else
-    {
-        // N = args;  如果没有空格，则整个字符串为第一个字符串
-        EXPR = ""; // 第二个字符串为空字符串
-    }
-
-    // printf("N: %s\n", N);
-    // printf("EXPR: %s\n", EXPR);
-
-	int len;
-
-	sscanf(args, "%d", &len);
-	swaddr_t address;
 	bool success;
-	address = expr(EXPR, &success);
-	if (!success)
-	{
-		printf("Bad expression\n");
-		return 0;
-	}
-	// printf("address: 0x%08x: ", address);
 
-	int i;
-	for (i = 0; i < len; i++)
+	if (args)
 	{
-		printf("0x%08x ", swaddr_read(address, 4));
-		address += 4;
-		if(i % 5 == 4) printf("\n");
+		uint32_t r = expr(args, &success);
+		if (success)
+		{
+			printf("0x%08x(%d)\n", r, r);
+		}
+		else
+		{
+			printf("Bad expression\n");
+		}
 	}
-	printf("\n");
-
 	return 0;
 }
 
+/* Add set watchpoint  */
 static int cmd_w(char *args)
 {
 	if (args)
 	{
-		int NO = wp_set(args);
+		int NO = set_watchpoint(args);
 		if (NO != -1)
 		{
 			printf("Set watchpoint #%d\n", NO);
@@ -169,16 +152,74 @@ static int cmd_w(char *args)
 	return 0;
 }
 
+/* Add delete watchpoint */
 static int cmd_d(char *args)
 {
 	int NO;
 	sscanf(args, "%d", &NO);
-	if (!wp_remove(NO))
+	if (!delete_watchpoint(NO))
 	{
 		printf("Watchpoint #%d does not exist\n", NO);
 	}
 
 	return 0;
+}
+
+/* Add display backtrace */
+static int cmd_bt(char *args)
+{
+	const char *find_fun_name(uint32_t eip);
+	struct
+	{
+		swaddr_t prev_ebp;
+		swaddr_t ret_addr;
+		uint32_t args[4];
+	} sf;
+
+	uint32_t ebp = cpu.ebp;
+	uint32_t eip = cpu.eip;
+	int i = 0;
+	current_sreg = R_SS;
+	while (ebp != 0)
+	{
+		sf.args[0] = swaddr_read(ebp + 8, 4);
+		sf.args[1] = swaddr_read(ebp + 12, 4);
+		sf.args[2] = swaddr_read(ebp + 16, 4);
+		sf.args[3] = swaddr_read(ebp + 20, 4);
+
+		printf("#%d 0x%08x in %s (0x%08x 0x%08x 0x%08x 0x%08x)\n", i, eip, find_fun_name(eip), sf.args[0], sf.args[1], sf.args[2], sf.args[3]);
+		i++;
+		eip = swaddr_read(ebp + 4, 4);
+		ebp = swaddr_read(ebp, 4);
+	}
+	return 0;
+}
+
+static int cmd_page(char *args)
+{
+	TestCorrect(args == NULL);
+	uint32_t addr;
+	sscanf(args, "%x", &addr);
+	int flag = 0;
+	uint32_t real_addr = page_translate_additional(addr, &flag);
+	if (flag == 0)
+		printf("0x%08x\n", real_addr);
+	else if (flag == 1)
+		printf("Dir Cannot Be Used!\n");
+	else
+		printf("Page Cannot Be Used!\n");
+	return 0;
+}
+
+static int cmd_c(char *args)
+{
+	cpu_exec(-1);
+	return 0;
+}
+
+static int cmd_q(char *args)
+{
+	return -1;
 }
 
 static int cmd_help(char *args);
@@ -194,12 +235,14 @@ static struct
 	{"q", "Exit NEMU", cmd_q},
 
 	/* TODO: Add more commands */
-	{"si", "Single step execution", cmd_si},
-	{"info", "r to print register values\n       w to show watch point state", cmd_info},
-	{"x", "examine memory", cmd_x},
-	{"p", "calculate expression", cmd_p},
-	{"w", "set a new watchpoint", cmd_w},
-	{"d", "delete watchpoint", cmd_d}
+	{"si", "Single step", cmd_si},
+	{"info", "info r - print register values; info w - show watch point state", cmd_info},
+	{"x", "Examine memory", cmd_x},
+	{"p", "Evaluate the value of expression", cmd_p},
+	{"w", "Set watchpoint", cmd_w},
+	{"d", "Delete watchpoint", cmd_d},
+	{"bt", "Display backtrace", cmd_bt},
+	{"page", "Translate ADDR in PAGE MODE", cmd_page}
 
 };
 
@@ -241,7 +284,7 @@ void ui_mainloop()
 		char *str = rl_gets();
 		char *str_end = str + strlen(str);
 
-		/* extract the first symbol as the command */
+		/* extract the first token as the command */
 		char *cmd = strtok(str, " ");
 		if (cmd == NULL)
 		{

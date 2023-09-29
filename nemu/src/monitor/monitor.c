@@ -5,10 +5,18 @@
 extern uint8_t entry[];
 extern uint32_t entry_len;
 extern char *exec_file;
+#define TLB_SIZE 64
+extern struct Tlb
+{
+	bool valid;
+	int tag;
+	int page_number;
+} tlb[TLB_SIZE];
 
 void load_elf_tables(int, char *[]);
 void init_regex();
-void wp_init();
+void init_wp_pool();
+void init_cache();
 void init_ddr3();
 
 FILE *log_fp = NULL;
@@ -25,6 +33,27 @@ static void welcome()
 		   exec_file);
 }
 
+static void init_cr0()
+{
+	cpu.cr0.protect_enable = 0;
+	cpu.cr0.paging = 0;
+}
+
+static void init_seg()
+{
+	cpu.cs.seg_base = 0x0;
+	cpu.cs.seg_limit = 0xffffffff;
+}
+
+static void init_tlb()
+{
+	int i;
+	for (i = 0; i < TLB_SIZE; i++)
+	{
+		tlb[i].valid = false;
+	}
+}
+
 void init_monitor(int argc, char *argv[])
 {
 	/* Perform some global initialization */
@@ -39,7 +68,7 @@ void init_monitor(int argc, char *argv[])
 	init_regex();
 
 	/* Initialize the watchpoint pool. */
-	wp_init();
+	init_wp_pool();
 
 	/* Display welcome message. */
 	welcome();
@@ -92,7 +121,13 @@ void restart()
 
 	/* Set the initial instruction pointer. */
 	cpu.eip = ENTRY_START;
+	cpu.eflags.val = 0x2;
+	init_cr0();
+	init_seg();
+	init_tlb();
 
 	/* Initialize DRAM. */
 	init_ddr3();
+
+	init_cache();
 }
